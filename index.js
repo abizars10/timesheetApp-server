@@ -28,6 +28,7 @@ const connectToDB = async () => {
 // Memanggil fungsi penghubung DB
 connectToDB();
 
+// CRUD Kegiatan
 // Mengambil database
 app.get("/kegiatan", (req, res) => {
   client.query(`select * from kegiatan`, (err, result) => {
@@ -63,7 +64,45 @@ app.put("/kegiatan/:id", (req, res) => {
   client.query(
     `update kegiatan set judul = '${judul}', proyek = '${proyek}', tgl_mulai = '${tgl_mulai}', tgl_berakhir = '${tgl_berakhir}', waktu_mulai = '${waktu_mulai}', waktu_berakhir = '${waktu_berakhir}', durasi = '${durasi}' where id = '${req.params.id}'`,
     (err, result) => {
-      !err ? res.send("Database updated successfully") : res.send(err.message);
+      !err ? res.send("Database updated successfully", result) : res.send(err.message);
     }
   );
+});
+
+// CRUD Karyawan
+// Mengambil database
+app.get("/karyawan", (req, res) => {
+  client.query(`select * from karyawan`, (err, result) => {
+    if (!err) {
+      res.send(result.rows);
+    }
+  });
+});
+
+// Menambahkan database
+app.post("/karyawan", (req, res) => {
+  const { nama, rate } = req.body;
+
+  client.query(`insert into karyawan(nama, rate) values ('${nama}', '${rate}')`, (err, result) => {
+    !err ? res.send("Database added employee successfully") : res.send(err.message);
+  });
+});
+
+// CRUD Proyek
+// Mengambil database
+app.get("/proyek", (req, res) => {
+  client.query(`select * from proyek`, (err, result) => {
+    if (!err) {
+      res.send(result.rows);
+    }
+  });
+});
+
+// Menambahkan database
+app.post("/proyek", (req, res) => {
+  const { nama_proyek } = req.body;
+
+  client.query(`insert into proyek(nama_proyek) values ('${nama_proyek}')`, (err, result) => {
+    !err ? res.send("Database added successfully") : res.send(err.message);
+  });
 });
