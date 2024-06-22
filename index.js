@@ -40,12 +40,11 @@ app.get("/kegiatan", (req, res) => {
 
 // Menambahkan database
 app.post("/kegiatan", (req, res) => {
-  const { judul, proyek, tgl_mulai, tgl_berakhir, waktu_mulai, waktu_berakhir, durasi } = req.body;
-
+  const { judul, proyek, tgl_mulai, tgl_berakhir, waktu_mulai, waktu_berakhir, durasi, id_karyawan } = req.body;
   client.query(
-    `insert into kegiatan(judul, proyek, tgl_mulai, tgl_berakhir, waktu_mulai, waktu_berakhir, durasi) values ('${judul}', '${proyek}', '${tgl_mulai}', '${tgl_berakhir}', '${waktu_mulai}', '${waktu_berakhir}', '${durasi}')`,
+    `insert into kegiatan(judul, proyek, tgl_mulai, tgl_berakhir, waktu_mulai, waktu_berakhir, durasi, id_karyawan) values ('${judul}', '${proyek}', '${tgl_mulai}', '${tgl_berakhir}', '${waktu_mulai}', '${waktu_berakhir}', '${durasi}', '${id_karyawan}')`,
     (err, result) => {
-      !err ? res.send("Database added successfully") : res.send(err.message);
+      !err ? res.send("Database added successfully") : res.send(err);
     }
   );
 });
@@ -59,10 +58,10 @@ app.delete("/kegiatan/:id", (req, res) => {
 
 // Memperbarui database
 app.put("/kegiatan/:id", (req, res) => {
-  const { judul, proyek, tgl_mulai, tgl_berakhir, waktu_mulai, waktu_berakhir, durasi } = req.body;
+  const { judul, proyek, tgl_mulai, tgl_berakhir, waktu_mulai, waktu_berakhir, durasi, id_karyawan } = req.body;
 
   client.query(
-    `update kegiatan set judul = '${judul}', proyek = '${proyek}', tgl_mulai = '${tgl_mulai}', tgl_berakhir = '${tgl_berakhir}', waktu_mulai = '${waktu_mulai}', waktu_berakhir = '${waktu_berakhir}', durasi = '${durasi}' where id = '${req.params.id}'`,
+    `update kegiatan set judul = '${judul}', proyek = '${proyek}', tgl_mulai = '${tgl_mulai}', tgl_berakhir = '${tgl_berakhir}', waktu_mulai = '${waktu_mulai}', waktu_berakhir = '${waktu_berakhir}', durasi = '${durasi}', id_karyawan = '${id_karyawan}' where id = '${req.params.id}'`,
     (err, result) => {
       !err ? res.send("Database updated successfully", result) : res.send(err.message);
     }
@@ -71,12 +70,25 @@ app.put("/kegiatan/:id", (req, res) => {
 
 // CRUD Karyawan
 // Mengambil database
-app.get("/karyawan", (req, res) => {
-  client.query(`select * from karyawan`, (err, result) => {
-    if (!err) {
-      res.send(result.rows);
-    }
-  });
+app.get("/karyawan", async (req, res) => {
+  try {
+    const karyawanResult = await client.query("SELECT * FROM karyawan");
+    const karyawan = karyawanResult.rows;
+
+    const kegiatanPromises = karyawan.map(async (karyawan) => {
+      const kegiatanResult = await client.query("SELECT * FROM kegiatan WHERE id_karyawan = $1", [karyawan.id]);
+      return {
+        ...karyawan,
+        kegiatan: kegiatanResult.rows,
+      };
+    });
+
+    const karyawanWithKegiatan = await Promise.all(kegiatanPromises);
+    res.json(karyawanWithKegiatan);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Terjadi kesalahan pada server");
+  }
 });
 
 // Menambahkan database
