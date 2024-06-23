@@ -100,6 +100,13 @@ app.post("/karyawan", (req, res) => {
   });
 });
 
+// Menghapus database
+app.delete("/karyawan/:id", (req, res) => {
+  client.query(`delete from karyawan where id = ${req.params.id}`, (err, result) => {
+    !err ? res.send("Database deleted successfully") : res.send(err.message);
+  });
+});
+
 // CRUD Proyek
 // Mengambil database
 app.get("/proyek", (req, res) => {
@@ -116,5 +123,12 @@ app.post("/proyek", (req, res) => {
 
   client.query(`insert into proyek(nama_proyek) values ('${nama_proyek}')`, (err, result) => {
     !err ? res.send("Database added successfully") : res.send(err.message);
+  });
+});
+
+// Menghapus database
+app.delete("/proyek/:id", (req, res) => {
+  client.query(`delete from proyek where id = ${req.params.id}`, (err, result) => {
+    !err ? res.send("Database deleted successfully") : res.send(err.message);
   });
 });
