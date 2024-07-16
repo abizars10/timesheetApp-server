@@ -100,11 +100,21 @@ app.post("/karyawan", (req, res) => {
   });
 });
 
-// Menghapus database
-app.delete("/karyawan/:id", (req, res) => {
-  client.query(`delete from karyawan where id = ${req.params.id}`, (err, result) => {
-    !err ? res.send("Database deleted successfully") : res.send(err.message);
-  });
+// Menghapus karyawan dan kegiatan terkait
+app.delete("/karyawan/:id", async (req, res) => {
+  const karyawanId = req.params.id;
+
+  try {
+    await client.query("BEGIN");
+    await client.query("DELETE FROM kegiatan WHERE id_karyawan = $1", [karyawanId]);
+    await client.query("DELETE FROM karyawan WHERE id = $1", [karyawanId]);
+    await client.query("COMMIT");
+    res.status(200).send({ message: "Karyawan dan kegiatan terkait berhasil dihapus" });
+  } catch (err) {
+    await client.query("ROLLBACK");
+    console.error("Error saat menghapus karyawan dan kegiatan:", err);
+    res.status(500).send({ error: "Terjadi kesalahan internal" });
+  }
 });
 
 // CRUD Proyek
