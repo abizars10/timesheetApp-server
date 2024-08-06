@@ -60,12 +60,28 @@ app.delete("/kegiatan/:id", (req, res) => {
 app.put("/kegiatan/:id", (req, res) => {
   const { judul, proyek, tgl_mulai, tgl_berakhir, waktu_mulai, waktu_berakhir, durasi, id_karyawan } = req.body;
 
-  client.query(
-    `update kegiatan set judul = '${judul}', proyek = '${proyek}', tgl_mulai = '${tgl_mulai}', tgl_berakhir = '${tgl_berakhir}', waktu_mulai = '${waktu_mulai}', waktu_berakhir = '${waktu_berakhir}', durasi = '${durasi}', id_karyawan = '${id_karyawan}' where id = '${req.params.id}'`,
-    (err, result) => {
-      !err ? res.send("Database updated successfully", result) : res.send(err.message);
+  const query = `
+    UPDATE kegiatan
+    SET judul = $1, proyek = $2, tgl_mulai = $3, tgl_berakhir = $4, 
+        waktu_mulai = $5, waktu_berakhir = $6, durasi = $7, id_karyawan = $8
+    WHERE id = $9
+  `;
+
+  const values = [judul, proyek, tgl_mulai, tgl_berakhir, waktu_mulai, waktu_berakhir, durasi, id_karyawan, req.params.id];
+
+  client.query(query, values, (err, result) => {
+    if (err) {
+      console.error("Error updating database:", err);
+      return res.status(500).send({ message: "Terjadi kesalahan saat memperbarui database", error: err.message });
     }
-  );
+
+    if (result.rowCount === 0) {
+      // Jika tidak ada baris yang diperbarui, artinya ID tidak ditemukan
+      return res.status(404).send({ message: "Data tidak ditemukan" });
+    }
+
+    res.status(200).send({ message: "Database updated successfully" });
+  });
 });
 
 // CRUD Karyawan
