@@ -12,7 +12,7 @@ app.use(cors());
 
 // Menjalankan server pada port
 app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+  console.log(`Server is running on http://localhost:${port}/karyawan`);
 });
 
 // Fungsi untuk menghubungkan ke database
