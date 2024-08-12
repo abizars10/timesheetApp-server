@@ -2,13 +2,10 @@ const express = require("express");
 const cors = require("cors");
 const client = require("./user");
 
-import helmet from "helmet";
-
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 // Menggunakan built-in middleware untuk parsing body
-app.use(helmet());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cors());
