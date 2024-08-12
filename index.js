@@ -12,7 +12,7 @@ app.use(cors());
 
 // Menjalankan server pada port
 app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}/karyawan`);
+  console.log(`Server is running on http://localhost:${port}`);
 });
 
 // Fungsi untuk menghubungkan ke database
@@ -27,6 +27,10 @@ const connectToDB = async () => {
 
 // Memanggil fungsi penghubung DB
 connectToDB();
+
+app.get("/", (req, res) => {
+  res.send("Selamat datang di API Timesheet!");
+});
 
 // CRUD Kegiatan
 // Mengambil database
