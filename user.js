@@ -1,12 +1,9 @@
 const { Client } = require("pg");
+require("dotenv").config(); // Memuat variabel lingkungan dari .env
 
-// konfigurasi koneksi ke database
+// konfigurasi koneksi ke database menggunakan DATABASE_URL
 const client = new Client({
-  user: process.env.PGUSER || "postgres",
-  host: process.env.PGHOST || "localhost",
-  database: process.env.PGDATABASE || "timesheetDB",
-  password: process.env.PGPASSWORD || "root",
-  port: process.env.PGPORT || 5432,
+  connectionString: process.env.DATABASE_URL,
   ssl: process.env.PGSSLMODE === "require" ? { rejectUnauthorized: false } : false,
 });
 
