@@ -93,12 +93,10 @@ app.put("/kegiatan/:id", (req, res) => {
 app.get("/karyawan", async (req, res) => {
   try {
     const karyawanResult = await client.query("SELECT * FROM karyawan");
-    console.log("Karyawan data retrieved:", karyawanResult.rows);
-
     const karyawan = karyawanResult.rows;
+
     const kegiatanPromises = karyawan.map(async (karyawan) => {
       const kegiatanResult = await client.query("SELECT * FROM kegiatan WHERE id_karyawan = $1", [karyawan.id]);
-      console.log(`Kegiatan for karyawan ${karyawan.id}:`, kegiatanResult.rows);
       return {
         ...karyawan,
         kegiatan: kegiatanResult.rows,
@@ -108,7 +106,7 @@ app.get("/karyawan", async (req, res) => {
     const karyawanWithKegiatan = await Promise.all(kegiatanPromises);
     res.json(karyawanWithKegiatan);
   } catch (err) {
-    console.error("Error fetching karyawan data:", err);
+    console.error(err);
     res.status(500).send("Terjadi kesalahan pada server");
   }
 });
