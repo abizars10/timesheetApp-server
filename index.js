@@ -12,7 +12,7 @@ app.use(cors());
 
 // Menjalankan server pada port
 app.listen(port, () => {
-  console.log(`Server berjalan di http://localhost:${port}`);
+  console.log(`Server is running on http://localhost:${port}`);
 });
 
 // Fungsi untuk menghubungkan ke database
@@ -35,9 +35,11 @@ app.get("/", (req, res) => {
 // CRUD Kegiatan
 // Mengambil database
 app.get("/kegiatan", (req, res) => {
-  client.query(`select * from kegiatan`, (err, result) => {
+  client.query("SELECT * FROM kegiatan", (err, result) => {
     if (!err) {
       res.send(result.rows);
+    } else {
+      res.status(500).send(err.message);
     }
   });
 });
@@ -45,18 +47,33 @@ app.get("/kegiatan", (req, res) => {
 // Menambahkan database
 app.post("/kegiatan", (req, res) => {
   const { judul, proyek, tgl_mulai, tgl_berakhir, waktu_mulai, waktu_berakhir, durasi, id_karyawan } = req.body;
-  client.query(
-    `insert into kegiatan(judul, proyek, tgl_mulai, tgl_berakhir, waktu_mulai, waktu_berakhir, durasi, id_karyawan) values ('${judul}', '${proyek}', '${tgl_mulai}', '${tgl_berakhir}', '${waktu_mulai}', '${waktu_berakhir}', '${durasi}', '${id_karyawan}')`,
-    (err, result) => {
-      !err ? res.send("Database added successfully") : res.send(err);
+  const query = `
+    INSERT INTO kegiatan(judul, proyek, tgl_mulai, tgl_berakhir, waktu_mulai, waktu_berakhir, durasi, id_karyawan)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *
+  `;
+  const values = [judul, proyek, tgl_mulai, tgl_berakhir, waktu_mulai, waktu_berakhir, durasi, id_karyawan];
+
+  client.query(query, values, (err, result) => {
+    if (!err) {
+      res.status(201).send(result.rows[0]);
+    } else {
+      res.status(500).send(err.message);
     }
-  );
+  });
 });
 
 // Menghapus database
 app.delete("/kegiatan/:id", (req, res) => {
-  client.query(`delete from kegiatan where id = ${req.params.id}`, (err, result) => {
-    !err ? res.send("Database deleted successfully") : res.send(err.message);
+  client.query("DELETE FROM kegiatan WHERE id = $1", [req.params.id], (err, result) => {
+    if (!err) {
+      if (result.rowCount > 0) {
+        res.send("Database deleted successfully");
+      } else {
+        res.status(404).send("Data tidak ditemukan");
+      }
+    } else {
+      res.status(500).send(err.message);
+    }
   });
 });
 
@@ -115,8 +132,12 @@ app.get("/karyawan", async (req, res) => {
 app.post("/karyawan", (req, res) => {
   const { nama, rate } = req.body;
 
-  client.query(`insert into karyawan(nama, rate) values ('${nama}', '${rate}')`, (err, result) => {
-    !err ? res.send("Database added employee successfully") : res.send(err.message);
+  client.query("INSERT INTO karyawan(nama, rate) VALUES ($1, $2) RETURNING *", [nama, rate], (err, result) => {
+    if (!err) {
+      res.status(201).send(result.rows[0]);
+    } else {
+      res.status(500).send(err.message);
+    }
   });
 });
 
@@ -127,8 +148,13 @@ app.delete("/karyawan/:id", async (req, res) => {
   try {
     await client.query("BEGIN");
     await client.query("DELETE FROM kegiatan WHERE id_karyawan = $1", [karyawanId]);
-    await client.query("DELETE FROM karyawan WHERE id = $1", [karyawanId]);
+    const result = await client.query("DELETE FROM karyawan WHERE id = $1 RETURNING *", [karyawanId]);
     await client.query("COMMIT");
+
+    if (result.rowCount === 0) {
+      return res.status(404).send({ message: "Karyawan tidak ditemukan" });
+    }
+
     res.status(200).send({ message: "Karyawan dan kegiatan terkait berhasil dihapus" });
   } catch (err) {
     await client.query("ROLLBACK");
@@ -140,9 +166,11 @@ app.delete("/karyawan/:id", async (req, res) => {
 // CRUD Proyek
 // Mengambil database
 app.get("/proyek", (req, res) => {
-  client.query(`select * from proyek`, (err, result) => {
+  client.query("SELECT * FROM proyek", (err, result) => {
     if (!err) {
       res.send(result.rows);
+    } else {
+      res.status(500).send(err.message);
     }
   });
 });
@@ -151,14 +179,26 @@ app.get("/proyek", (req, res) => {
 app.post("/proyek", (req, res) => {
   const { nama_proyek } = req.body;
 
-  client.query(`insert into proyek(nama_proyek) values ('${nama_proyek}')`, (err, result) => {
-    !err ? res.send("Database added successfully") : res.send(err.message);
+  client.query("INSERT INTO proyek(nama_proyek) VALUES ($1) RETURNING *", [nama_proyek], (err, result) => {
+    if (!err) {
+      res.status(201).send(result.rows[0]);
+    } else {
+      res.status(500).send(err.message);
+    }
   });
 });
 
 // Menghapus database
 app.delete("/proyek/:id", (req, res) => {
-  client.query(`delete from proyek where id = ${req.params.id}`, (err, result) => {
-    !err ? res.send("Database deleted successfully") : res.send(err.message);
+  client.query("DELETE FROM proyek WHERE id = $1", [req.params.id], (err, result) => {
+    if (!err) {
+      if (result.rowCount > 0) {
+        res.send("Database deleted successfully");
+      } else {
+        res.status(404).send("Data tidak ditemukan");
+      }
+    } else {
+      res.status(500).send(err.message);
+    }
   });
 });
